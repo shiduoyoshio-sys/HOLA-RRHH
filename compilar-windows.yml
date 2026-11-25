@@ -1,0 +1,37 @@
+name: Compilar instalador Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-build.txt
+      - name: Compilar aplicación
+        shell: cmd
+        run: pyinstaller --noconfirm --clean --windowed --name Sistema_RRHH_Red01 main.py
+      - name: Instalar Inno Setup
+        run: choco install innosetup --yes --no-progress
+      - name: Crear instalador
+        shell: cmd
+        run: ISCC.exe INSTALADOR_INNO_SETUP.iss
+      - name: Publicar archivos compilados
+        uses: actions/upload-artifact@v4
+        with:
+          name: RRHH-Red-01-Cobija-Windows
+          path: |
+            installer/Instalador_RRHH_Red_01_Cobija.exe
+            dist/Sistema_RRHH_Red01/
+          if-no-files-found: error
